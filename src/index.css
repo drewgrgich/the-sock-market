@@ -1,0 +1,18 @@
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  height: 100%;
+}
+
+body {
+  font: 16px/1.45 "Atkinson Hyperlegible", system-ui, sans-serif;
+  background:
+    radial-gradient(circle at 20% 10%, rgba(201, 162, 39, 0.12), transparent 40%),
+    #f5edd8;
+  color: #2b2b2b;
+}

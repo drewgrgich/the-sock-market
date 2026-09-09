@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="360" viewBox="0 0 1200 360">
+  <rect width="1200" height="360" fill="#F5EDD8"/>
+  <line x1="80" y1="92" x2="470" y2="92" stroke="#C9A227" stroke-width="9"/>
+  <line x1="730" y1="92" x2="1120" y2="92" stroke="#C9A227" stroke-width="9"/>
+  <text x="600" y="116" fill="#C9A227" font-family="Atkinson Hyperlegible, sans-serif" font-size="92" font-weight="700" text-anchor="middle">THE</text>
+  <text x="600" y="280" fill="#2B2B2B" font-family="Bree Serif, serif" font-size="174" text-anchor="middle">SOCK MARKET</text>
+</svg>
