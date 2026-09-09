@@ -10,10 +10,14 @@ import {
   advanceSeat,
   affordableRowIndices,
   canBuyBin,
+  coachHint,
+  gradePlay,
   playTurn,
   scoreGame,
+  type CoachHint,
   type GameState,
   type Purchase,
+  type ShopStep,
 } from "../engine/index.ts"
 import { ActionPanel } from "./ActionPanel.tsx"
 import { CLIENT_ART, WORDMARK } from "./art.ts"
@@ -41,9 +45,28 @@ export function TableView({ state, onState, onNewGame }: Props) {
   const [shopBuys, setShopBuys] = useState(0)
   const [undo, setUndo] = useState<GameState | null>(null)
   const [dumpLine, setDumpLine] = useState<number | null>(null)
+  const [shopCart, setShopCart] = useState<ShopStep[]>([])
+  const [coachTap, setCoachTap] = useState({ key: "", level: 0 as 0 | 1 | 2 })
+  const [grade, setGrade] = useState<string | null>(null)
+  const [turnCoach, setTurnCoach] = useState<{
+    key: string
+    hint: CoachHint | null
+    at: GameState | null
+  }>({ key: "", hint: null, at: null })
   const logRef = useRef<HTMLOListElement>(null)
 
   const yourTurn = !state.gameOver && state.seats[state.current]?.kind === "human"
+  const turnKey = `${state.turnsTaken}:${state.current}`
+  const hintLevel = coachTap.key === turnKey ? coachTap.level : 0
+  const snap =
+    turnCoach.key === turnKey
+      ? turnCoach
+      : {
+          key: turnKey,
+          hint: yourTurn ? coachHint(state, you) : null,
+          at: yourTurn ? state : null,
+        }
+  if (turnCoach.key !== turnKey) setTurnCoach(snap)
   const recentLog = state.log.slice(-5)
   const startSeat = (state.current - (state.turnsTaken % state.n) + state.n) % state.n
   const humanReached = state.turnsTaken >= (you - startSeat + state.n) % state.n
@@ -63,31 +86,44 @@ export function TableView({ state, onState, onNewGame }: Props) {
     return () => window.clearTimeout(id)
   }, [state, onState, humanReached])
 
+  function noteGrade(taken: Parameters<typeof gradePlay>[1]) {
+    if (snap.hint && snap.at) setGrade(gradePlay(snap.hint, taken, snap.at))
+  }
+
   function startShop() {
     setUndo(cloneState(state))
     setShopBuys(0)
+    setShopCart([])
     setMode("shop")
   }
 
   function buy(purchase: Purchase) {
+    const step: ShopStep =
+      purchase.source === "bin" ? { source: "bin" } : { source: "row", line: state.row[purchase.index] ?? 0 }
+    const nextCart = [...shopCart, step]
     const next = applyPurchase(state, purchase)
     const n = shopBuys + 1
     setShopBuys(n)
+    setShopCart(nextCart)
     if (n >= 2) {
+      noteGrade({ type: "shop", steps: nextCart })
       onState(finishShop(next))
       setMode("choose")
       setUndo(null)
       setShopBuys(0)
+      setShopCart([])
       return
     }
     onState(next)
   }
 
   function doneShopping() {
+    noteGrade({ type: "shop", steps: shopCart })
     onState(finishShop(state))
     setMode("choose")
     setUndo(null)
     setShopBuys(0)
+    setShopCart([])
   }
 
   function undoShop() {
@@ -95,12 +131,14 @@ export function TableView({ state, onState, onNewGame }: Props) {
     setMode("choose")
     setUndo(null)
     setShopBuys(0)
+    setShopCart([])
   }
 
   function dumpAmount(count: number) {
     if (dumpLine === null) return
     const max = dumpMax(state, you, dumpLine)
     const n = Math.max(1, Math.min(count, max))
+    noteGrade({ type: "dump", line: dumpLine, count: n })
     onState(playTurn(state, { type: "dump", line: dumpLine, count: n }))
     setMode("choose")
     setDumpLine(null)
@@ -304,12 +342,25 @@ export function TableView({ state, onState, onNewGame }: Props) {
           mode={mode}
           shopBuys={shopBuys}
           dumpLine={dumpLine}
+          coachLevel={hintLevel}
+          principle={snap.hint?.principle ?? ""}
+          move={snap.hint?.move ?? ""}
+          grade={grade}
+          onCoach={() =>
+            setCoachTap({
+              key: turnKey,
+              level: hintLevel >= 2 ? 2 : ((hintLevel + 1) as 0 | 1 | 2),
+            })
+          }
           onShop={startShop}
           onDump={() => {
             setMode("dump")
             setDumpLine(null)
           }}
-          onLaundromat={() => onState(playTurn(state, { type: "laundromat" }))}
+          onLaundromat={() => {
+            noteGrade({ type: "laundromat" })
+            onState(playTurn(state, { type: "laundromat" }))
+          }}
           onPurchase={buy}
           onDoneShopping={doneShopping}
           onUndoShop={undoShop}
@@ -320,6 +371,7 @@ export function TableView({ state, onState, onNewGame }: Props) {
       ) : (
         <section className="actions">
           <h2>{seatTitle(state, state.current)} is up</h2>
+          {grade && <p className="coach-grade">{grade}</p>}
           <ol className="last-act">
             {recentLog.map((line, i) => (
               <li key={`${i}-${line}`}>{line}</li>

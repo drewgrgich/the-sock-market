@@ -10,6 +10,11 @@ type Props = {
   mode: Mode
   shopBuys: number
   dumpLine: number | null
+  coachLevel: 0 | 1 | 2
+  principle: string
+  move: string
+  grade: string | null
+  onCoach: () => void
   onShop: () => void
   onDump: () => void
   onLaundromat: () => void
@@ -96,6 +101,7 @@ export function ActionPanel(props: Props) {
   return (
     <section className="actions">
       <h2>Your turn — pick one action</h2>
+      {props.grade && <p className="coach-grade">{props.grade}</p>}
       <div className="row-btns">
         <button type="button" className="btn primary" disabled={!canShop(state, seat)} onClick={props.onShop}>
           Shop
@@ -106,7 +112,12 @@ export function ActionPanel(props: Props) {
         <button type="button" className="btn" onClick={props.onLaundromat}>
           Laundromat (+{gain})
         </button>
+        <button type="button" className="btn" onClick={props.onCoach}>
+          Coach
+        </button>
       </div>
+      {props.coachLevel >= 1 && <p className="coach">{props.principle}</p>}
+      {props.coachLevel >= 2 && <p className="coach-move">{props.move}</p>}
     </section>
   )
 }

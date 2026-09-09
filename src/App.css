@@ -366,6 +366,22 @@ h1 {
   font-size: 0.9rem;
 }
 
+.coach,
+.coach-move {
+  margin: 0.45rem 0 0;
+  font-size: 0.92rem;
+}
+
+.coach-move {
+  font-weight: 700;
+}
+
+.coach-grade {
+  margin: 0.2rem 0 0.45rem;
+  color: #7a2e3b;
+  font-weight: 700;
+}
+
 .log ol li.fresh {
   font-weight: 700;
   color: #7a2e3b;
