@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import {
   LINE_NAMES,
   PRICE_MAX,
@@ -42,17 +42,27 @@ export function TableView({ state, onState, onNewGame }: Props) {
   const [shopBuys, setShopBuys] = useState(0)
   const [undo, setUndo] = useState<GameState | null>(null)
   const [dumpLine, setDumpLine] = useState<number | null>(null)
+  const logRef = useRef<HTMLOListElement>(null)
 
   const yourTurn = !state.gameOver && state.seats[state.current]?.kind === "human"
+  const recentLog = state.log.slice(-5)
+  const startSeat = (state.current - (state.turnsTaken % state.n) + state.n) % state.n
+  const humanReached = state.turnsTaken >= (you - startSeat + state.n) % state.n
+
+  useEffect(() => {
+    const el = logRef.current
+    if (el) el.scrollTop = el.scrollHeight
+  }, [state.log])
 
   useEffect(() => {
     if (state.gameOver) return
     if (state.seats[state.current]?.kind === "human") return
+    if (!humanReached) return
     const id = window.setTimeout(() => {
       onState(advanceSeat(state))
-    }, 700)
+    }, 1100)
     return () => window.clearTimeout(id)
-  }, [state, onState])
+  }, [state, onState, humanReached])
 
   function startShop() {
     setUndo(cloneState(state))
@@ -114,6 +124,11 @@ export function TableView({ state, onState, onNewGame }: Props) {
           <img className="wordmark" src={WORDMARK} alt="The Sock Market" />
           <p>
             Seed {state.seed}
+            {state.gameOver
+              ? ""
+              : yourTurn
+                ? " · Your turn"
+                : ` · ${seatTitle(state, state.current)}'s turn`}
             {state.inFinal ? " · Final round" : ""}
             {state.endTriggered && !state.gameOver ? " · Market ending" : ""}
           </p>
@@ -310,7 +325,19 @@ export function TableView({ state, onState, onNewGame }: Props) {
         />
       ) : (
         <section className="actions">
-          <h2>{seatTitle(state, state.current)} is acting</h2>
+          <h2>{seatTitle(state, state.current)} is up</h2>
+          <ol className="last-act">
+            {recentLog.map((line, i) => (
+              <li key={`${i}-${line}`}>{line}</li>
+            ))}
+          </ol>
+          {!humanReached && (
+            <div className="row-btns">
+              <button type="button" className="btn primary" onClick={() => onState(advanceSeat(state))}>
+                See this turn
+              </button>
+            </div>
+          )}
         </section>
       )}
 
@@ -342,9 +369,11 @@ export function TableView({ state, onState, onNewGame }: Props) {
               Copy
             </button>
           </div>
-          <ol>
+          <ol ref={logRef}>
             {state.log.map((line, i) => (
-              <li key={`${i}-${line}`}>{line}</li>
+              <li key={`${i}-${line}`} className={i === state.log.length - 1 ? "fresh" : undefined}>
+                {line}
+              </li>
             ))}
           </ol>
           <label className="debug">
