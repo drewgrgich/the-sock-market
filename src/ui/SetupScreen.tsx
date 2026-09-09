@@ -27,7 +27,7 @@ type Props = {
 }
 
 export function SetupScreen({ onStart }: Props) {
-  const [seed, setSeed] = useState("pause3")
+  const [seed, setSeed] = useState("")
   const [rule, setRule] = useState<LaundromatRule>("tiered")
   const [bots, setBots] = useState<Bot[]>(aiBots(2))
   const [dial, setDial] = useState(0)
@@ -51,7 +51,7 @@ export function SetupScreen({ onStart }: Props) {
       ),
     ]
     onStart({
-      seed: seed.trim() || "pause3",
+      seed: seed.trim() || String(Math.floor(Math.random() * 1e9)),
       seats,
       laundromatRule: rule,
       wholesalerCoinAdjust: hasW ? dial : 0,
@@ -63,7 +63,17 @@ export function SetupScreen({ onStart }: Props) {
       <img className="crest" src={CREST} alt="" />
       <img className="wordmark" src={WORDMARK} alt="The Sock Market" />
       <p className="tag">No Cold Feet on Wool Street</p>
-      <p>You vs 2 to 4 robots. Each robot is an AI collector or the Wholesaler dealer.</p>
+      <p>You vs 2 to 4 opponents. Each seat is an AI collector or a Wholesaler.</p>
+      <div className="explain">
+        <p>
+          <strong>AI collector</strong> — plays like a person: hidden hand, hidden Client,
+          Shop / Dump / Laundromat. Style changes how they shop and dump.
+        </p>
+        <p>
+          <strong>Wholesaler</strong> — the automa from the boxed game. Face-up Stash, no
+          hidden hand. Flips an Order card each turn and buys at trade price. He can win.
+        </p>
+      </div>
 
       <h2>Quick tables</h2>
       <div className="row-btns">
@@ -122,7 +132,7 @@ export function SetupScreen({ onStart }: Props) {
                 setBots((prev) => prev.map((b, j) => (j === i ? { ...b, kind: "ai" } : b)))
               }
             />
-            AI
+            AI collector
           </label>
           <label>
             <input
@@ -166,20 +176,34 @@ export function SetupScreen({ onStart }: Props) {
         </label>
       )}
 
-      <label className="field">
-        Seed
-        <input value={seed} onChange={(e) => setSeed(e.target.value)} />
-      </label>
-      <button type="button" className="btn" onClick={() => setSeed(String(Math.floor(Math.random() * 1e9)))}>
-        Random seed
-      </button>
-      <label className="field">
-        Laundromat
-        <select value={rule} onChange={(e) => setRule(e.target.value as LaundromatRule)}>
-          <option value="tiered">Tiered (5 or fewer coins → +2, else +1)</option>
-          <option value="flat">Flat (always +2)</option>
-        </select>
-      </label>
+      <details className="options">
+        <summary>Options</summary>
+        <p className="hint">
+          Same seed + same seats deals the same table. Leave blank for a random deal.
+        </p>
+        <label className="field">
+          Seed
+          <input
+            value={seed}
+            onChange={(e) => setSeed(e.target.value)}
+            placeholder="random"
+          />
+        </label>
+        <button
+          type="button"
+          className="btn"
+          onClick={() => setSeed(String(Math.floor(Math.random() * 1e9)))}
+        >
+          Random seed
+        </button>
+        <label className="field">
+          Laundromat
+          <select value={rule} onChange={(e) => setRule(e.target.value as LaundromatRule)}>
+            <option value="tiered">Tiered (5 or fewer coins → +2, else +1)</option>
+            <option value="flat">Flat (always +2)</option>
+          </select>
+        </label>
+      </details>
       <button type="button" className="btn primary" onClick={start}>
         Start
       </button>
