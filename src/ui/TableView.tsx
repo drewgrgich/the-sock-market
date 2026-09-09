@@ -272,9 +272,9 @@ export function TableView({ state, onState, onNewGame }: Props) {
                       )}
                     </div>
                   )}
-                  <p>Client</p>
+                  <p>Client · {LINE_NAMES[state.clients[seat] ?? 0]}</p>
                   <img
-                    className="client-card"
+                    className="client-card yours"
                     src={CLIENT_ART[state.clients[seat] ?? 0]}
                     alt={LINE_NAMES[state.clients[seat] ?? 0]}
                   />
@@ -415,6 +415,10 @@ export function TableView({ state, onState, onNewGame }: Props) {
               Copy
             </button>
           </div>
+          <label className="debug">
+            <input type="checkbox" checked={revealAll} onChange={(e) => setRevealAll(e.target.checked)} />
+            Reveal all hands
+          </label>
           <ol ref={logRef}>
             {state.log.map((line, i) => (
               <li key={`${i}-${line}`} className={i === state.log.length - 1 ? "fresh" : undefined}>
@@ -422,10 +426,6 @@ export function TableView({ state, onState, onNewGame }: Props) {
               </li>
             ))}
           </ol>
-          <label className="debug">
-            <input type="checkbox" checked={revealAll} onChange={(e) => setRevealAll(e.target.checked)} />
-            Reveal all hands
-          </label>
         </aside>
       </div>
 
