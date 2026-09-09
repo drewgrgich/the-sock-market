@@ -24,9 +24,10 @@ function aiBots(n: number, style: AiStyle = "balanced"): Bot[] {
 
 type Props = {
   onStart: (options: SetupOptions) => void
+  onHowToPlay: () => void
 }
 
-export function SetupScreen({ onStart }: Props) {
+export function SetupScreen({ onStart, onHowToPlay }: Props) {
   const [seed, setSeed] = useState("")
   const [rule, setRule] = useState<LaundromatRule>("tiered")
   const [bots, setBots] = useState<Bot[]>(aiBots(2))
@@ -204,9 +205,14 @@ export function SetupScreen({ onStart }: Props) {
           </select>
         </label>
       </details>
-      <button type="button" className="btn primary" onClick={start}>
-        Start
-      </button>
+      <div className="row-btns">
+        <button type="button" className="btn" onClick={onHowToPlay}>
+          How to play
+        </button>
+        <button type="button" className="btn primary" onClick={start}>
+          Start
+        </button>
+      </div>
     </main>
   )
 }
