@@ -16,7 +16,7 @@ import {
   type Purchase,
 } from "../engine/index.ts"
 import { ActionPanel } from "./ActionPanel.tsx"
-import { CLIENT_ART, CLIENT_BACK, WORDMARK } from "./art.ts"
+import { CLIENT_ART, WORDMARK } from "./art.ts"
 import { CoinPile } from "./CoinPile.tsx"
 import { HowToPlay } from "./HowToPlay.tsx"
 import { countsByLine, humanSeat, seatTitle } from "./labels.ts"
@@ -34,7 +34,6 @@ type Mode = "choose" | "shop" | "dump"
 export function TableView({ state, onState, onNewGame }: Props) {
   const you = humanSeat(state)
   const [showHand, setShowHand] = useState(true)
-  const [showClient, setShowClient] = useState(false)
   const [revealAll, setRevealAll] = useState(false)
   const [revealSeat, setRevealSeat] = useState<Record<number, boolean>>({})
   const [how, setHow] = useState(false)
@@ -235,16 +234,11 @@ export function TableView({ state, onState, onNewGame }: Props) {
                       )}
                     </div>
                   )}
-                  <p>
-                    Client{" "}
-                    <button type="button" className="link" onClick={() => setShowClient((v) => !v)}>
-                      {showClient ? "Hide" : "Show"}
-                    </button>
-                  </p>
+                  <p>Client</p>
                   <img
                     className="client-card"
-                    src={showClient ? CLIENT_ART[state.clients[seat] ?? 0] : CLIENT_BACK}
-                    alt={showClient ? LINE_NAMES[state.clients[seat] ?? 0] : "hidden Client"}
+                    src={CLIENT_ART[state.clients[seat] ?? 0]}
+                    alt={LINE_NAMES[state.clients[seat] ?? 0]}
                   />
                 </>
               )}
