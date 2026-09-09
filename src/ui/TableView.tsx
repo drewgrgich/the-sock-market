@@ -31,11 +31,13 @@ type Props = {
   state: GameState
   onState: (state: GameState) => void
   onNewGame: () => void
+  coachEnabled: boolean
+  watchTurns: boolean
 }
 
 type Mode = "choose" | "shop" | "dump"
 
-export function TableView({ state, onState, onNewGame }: Props) {
+export function TableView({ state, onState, onNewGame, coachEnabled, watchTurns }: Props) {
   const you = humanSeat(state)
   const [showHand, setShowHand] = useState(true)
   const [revealAll, setRevealAll] = useState(false)
@@ -63,13 +65,11 @@ export function TableView({ state, onState, onNewGame }: Props) {
       ? turnCoach
       : {
           key: turnKey,
-          hint: yourTurn ? coachHint(state, you) : null,
-          at: yourTurn ? state : null,
+          hint: coachEnabled && yourTurn ? coachHint(state, you) : null,
+          at: coachEnabled && yourTurn ? state : null,
         }
   if (turnCoach.key !== turnKey) setTurnCoach(snap)
   const recentLog = state.log.slice(-5)
-  const startSeat = (state.current - (state.turnsTaken % state.n) + state.n) % state.n
-  const humanReached = state.turnsTaken >= (you - startSeat + state.n) % state.n
 
   useEffect(() => {
     const el = logRef.current
@@ -79,14 +79,15 @@ export function TableView({ state, onState, onNewGame }: Props) {
   useEffect(() => {
     if (state.gameOver) return
     if (state.seats[state.current]?.kind === "human") return
-    if (!humanReached) return
+    if (watchTurns) return
     const id = window.setTimeout(() => {
       onState(advanceSeat(state))
     }, 1100)
     return () => window.clearTimeout(id)
-  }, [state, onState, humanReached])
+  }, [state, onState, watchTurns])
 
   function noteGrade(taken: Parameters<typeof gradePlay>[1]) {
+    if (!coachEnabled) return
     if (snap.hint && snap.at) setGrade(gradePlay(snap.hint, taken, snap.at))
   }
 
@@ -246,6 +247,7 @@ export function TableView({ state, onState, onNewGame }: Props) {
           const active = seat === state.current && !state.gameOver
           const kind = state.seats[seat]?.kind
           const peek = revealAll || revealSeat[seat] || state.gameOver
+          const held = (state.hands[seat] ?? []).reduce((a, b) => a + b, 0)
           return (
             <article key={seat} className={active ? "seat active" : "seat"}>
               <h3>{seatTitle(state, seat)}</h3>
@@ -258,7 +260,7 @@ export function TableView({ state, onState, onNewGame }: Props) {
               {mine && (
                 <>
                   <p>
-                    Hand{" "}
+                    Hand · {held}{" "}
                     <button type="button" className="link" onClick={() => setShowHand((v) => !v)}>
                       {showHand ? "Hide" : "Show"}
                     </button>
@@ -272,17 +274,25 @@ export function TableView({ state, onState, onNewGame }: Props) {
                       )}
                     </div>
                   )}
-                  <p>Client · {LINE_NAMES[state.clients[seat] ?? 0]}</p>
-                  <img
-                    className="client-card yours"
-                    src={CLIENT_ART[state.clients[seat] ?? 0]}
-                    alt={LINE_NAMES[state.clients[seat] ?? 0]}
-                  />
+                  <div className="client-readout">
+                    <img
+                      className="client-card yours"
+                      src={CLIENT_ART[state.clients[seat] ?? 0]}
+                      alt={LINE_NAMES[state.clients[seat] ?? 0]}
+                    />
+                    <div className="client-copy">
+                      <p className="muted">Client</p>
+                      <p>
+                        <strong>{LINE_NAMES[state.clients[seat] ?? 0]}</strong>
+                      </p>
+                      <p>Matching Receipts of this line pay +2 each at the end.</p>
+                    </div>
+                  </div>
                 </>
               )}
               {!mine && kind === "wholesaler" && (
                 <>
-                  <p>Stash</p>
+                  <p>Stash · {held}</p>
                   <div className="mini-row">
                     {(state.hands[seat] ?? []).flatMap((n, line) =>
                       Array.from({ length: n }, (_, i) => (
@@ -303,7 +313,7 @@ export function TableView({ state, onState, onNewGame }: Props) {
               {!mine && kind === "ai" && (
                 <>
                   <p>
-                    Hand and Client hidden{" "}
+                    Hand · {held}{" "}
                     <button
                       type="button"
                       className="link"
@@ -312,21 +322,24 @@ export function TableView({ state, onState, onNewGame }: Props) {
                       {revealSeat[seat] ? "Hide" : "Reveal this AI"}
                     </button>
                   </p>
-                  {peek && (
-                    <>
-                      <div className="mini-row">
-                        {(state.hands[seat] ?? []).flatMap((n, line) =>
+                  <div className="mini-row">
+                    {peek
+                      ? (state.hands[seat] ?? []).flatMap((n, line) =>
                           Array.from({ length: n }, (_, i) => (
                             <SockCard key={`${line}-${i}`} line={line} compact />
                           )),
-                        )}
-                      </div>
-                      <img
-                        className="client-card"
-                        src={CLIENT_ART[state.clients[seat] ?? 0]}
-                        alt={LINE_NAMES[state.clients[seat] ?? 0]}
-                      />
-                    </>
+                        )
+                      : Array.from({ length: held }, (_, i) => (
+                          <SockCard key={i} faceDown compact />
+                        ))}
+                  </div>
+                  <p>Client hidden</p>
+                  {peek && (
+                    <img
+                      className="client-card"
+                      src={CLIENT_ART[state.clients[seat] ?? 0]}
+                      alt={LINE_NAMES[state.clients[seat] ?? 0]}
+                    />
                   )}
                 </>
               )}
@@ -345,7 +358,8 @@ export function TableView({ state, onState, onNewGame }: Props) {
           coachLevel={hintLevel}
           principle={snap.hint?.principle ?? ""}
           move={snap.hint?.move ?? ""}
-          grade={grade}
+          grade={coachEnabled ? grade : null}
+          coachEnabled={coachEnabled}
           onCoach={() =>
             setCoachTap({
               key: turnKey,
@@ -371,13 +385,13 @@ export function TableView({ state, onState, onNewGame }: Props) {
       ) : (
         <section className="actions">
           <h2>{seatTitle(state, state.current)} is up</h2>
-          {grade && <p className="coach-grade">{grade}</p>}
+          {coachEnabled && grade && <p className="coach-grade">{grade}</p>}
           <ol className="last-act">
             {recentLog.map((line, i) => (
               <li key={`${i}-${line}`}>{line}</li>
             ))}
           </ol>
-          {!humanReached && (
+          {watchTurns && (
             <div className="row-btns">
               <button type="button" className="btn primary" onClick={() => onState(advanceSeat(state))}>
                 See this turn

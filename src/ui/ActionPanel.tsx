@@ -14,6 +14,7 @@ type Props = {
   principle: string
   move: string
   grade: string | null
+  coachEnabled: boolean
   onCoach: () => void
   onShop: () => void
   onDump: () => void
@@ -112,12 +113,14 @@ export function ActionPanel(props: Props) {
         <button type="button" className="btn" onClick={props.onLaundromat}>
           Laundromat (+{gain})
         </button>
-        <button type="button" className="btn" onClick={props.onCoach}>
-          Coach
-        </button>
+        {props.coachEnabled && (
+          <button type="button" className="btn" onClick={props.onCoach}>
+            Coach
+          </button>
+        )}
       </div>
-      {props.coachLevel >= 1 && <p className="coach">{props.principle}</p>}
-      {props.coachLevel >= 2 && <p className="coach-move">{props.move}</p>}
+      {props.coachEnabled && props.coachLevel >= 1 && <p className="coach">{props.principle}</p>}
+      {props.coachEnabled && props.coachLevel >= 2 && <p className="coach-move">{props.move}</p>}
     </section>
   )
 }

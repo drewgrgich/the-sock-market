@@ -8,6 +8,8 @@ import "./App.css"
 function App() {
   const [state, setState] = useState<GameState | null>(null)
   const [tutorial, setTutorial] = useState(true)
+  const [coach, setCoach] = useState(true)
+  const [watchTurns, setWatchTurns] = useState(true)
 
   if (!state) {
     if (tutorial) {
@@ -19,11 +21,23 @@ function App() {
       <SetupScreen
         onStart={(options) => setState(setupGame(options))}
         onHowToPlay={() => setTutorial(true)}
+        coach={coach}
+        onCoach={setCoach}
+        watchTurns={watchTurns}
+        onWatchTurns={setWatchTurns}
       />
     )
   }
 
-  return <TableView state={state} onState={setState} onNewGame={() => setState(null)} />
+  return (
+    <TableView
+      state={state}
+      onState={setState}
+      onNewGame={() => setState(null)}
+      coachEnabled={coach}
+      watchTurns={watchTurns}
+    />
+  )
 }
 
 export default App

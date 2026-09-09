@@ -25,9 +25,13 @@ function aiBots(n: number, style: AiStyle = "balanced"): Bot[] {
 type Props = {
   onStart: (options: SetupOptions) => void
   onHowToPlay: () => void
+  coach: boolean
+  onCoach: (on: boolean) => void
+  watchTurns: boolean
+  onWatchTurns: (on: boolean) => void
 }
 
-export function SetupScreen({ onStart, onHowToPlay }: Props) {
+export function SetupScreen({ onStart, onHowToPlay, coach, onCoach, watchTurns, onWatchTurns }: Props) {
   const [seed, setSeed] = useState("")
   const [rule, setRule] = useState<LaundromatRule>("tiered")
   const [bots, setBots] = useState<Bot[]>(aiBots(2))
@@ -205,6 +209,14 @@ export function SetupScreen({ onStart, onHowToPlay }: Props) {
           </select>
         </label>
       </details>
+      <label className="check">
+        <input type="checkbox" checked={watchTurns} onChange={(e) => onWatchTurns(e.target.checked)} />
+        Watch opponent turns
+      </label>
+      <label className="check">
+        <input type="checkbox" checked={coach} onChange={(e) => onCoach(e.target.checked)} />
+        Coach hints
+      </label>
       <div className="row-btns">
         <button type="button" className="btn" onClick={onHowToPlay}>
           How to play
