@@ -324,6 +324,12 @@ h1 {
   font-size: 0.95rem;
 }
 
+.seat-held {
+  margin: 0.15rem 0 0.35rem;
+  font-weight: 700;
+  font-size: 1.05rem;
+}
+
 .seat p {
   margin: 0.2rem 0;
   font-size: 0.85rem;

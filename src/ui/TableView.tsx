@@ -256,6 +256,9 @@ export function TableView({ state, onState, onNewGame, coachEnabled, watchTurns 
               ) : (
                 <p>{state.coins[seat]} coins</p>
               )}
+              <p className="seat-held">
+                {kind === "wholesaler" ? `${held} in stash` : `${held} in hand`}
+              </p>
               <p>Receipts: {countsByLine(state.receipts[seat] ?? [])}</p>
               {mine && (
                 <>
